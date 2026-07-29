@@ -1,0 +1,11 @@
+[variables]
+PORT = "8080"
+
+[phases.install]
+cmds = ["npm install"]
+
+[phases.build]
+cmds = ["rm -rf dist", "./node_modules/.bin/vite build"]
+
+[start]
+cmd = "node server.js"
