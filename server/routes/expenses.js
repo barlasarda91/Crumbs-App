@@ -2,8 +2,22 @@ import { Router } from "express";
 import { db, getAllSettings, setSetting } from "../db.js";
 import { nowISO, laDateStr, addDaysStr } from "../dates.js";
 import { computeBaseline, latestBaseline, previousBaseline, recomputeAll } from "../baselines.js";
+import { syncSquareMetricsLogged } from "../square.js";
 
 export const expensesRouter = Router();
+
+// Refill the square_daily_metrics cache (denominators for baselines).
+// Body: { days } — use 90 for the initial backfill; the Monday cron
+// keeps the trailing 14 days fresh after that.
+expensesRouter.post("/api/square/sync", async (req, res) => {
+  try {
+    const days = Math.min(180, Math.max(1, parseInt(req.body?.days) || 14));
+    const result = await syncSquareMetricsLogged({ days });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ─── Vendors ──────────────────────────────────────────────────────────────────
 expensesRouter.get("/api/vendors", (_req, res) => {

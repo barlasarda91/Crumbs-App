@@ -53,6 +53,20 @@ export default function ExpensesView({ onOpenInvoices, T }) {
     finally { setRecomputing(false); }
   };
 
+  // Refill 90 days of Square metrics (baseline denominators), then recompute.
+  // Needed once at setup and after changing the drink definition; the Monday
+  // cron keeps the trailing 14 days fresh otherwise.
+  const [squareSyncing, setSquareSyncing] = useState(false);
+  const syncSquare = async () => {
+    setSquareSyncing(true); setError(null);
+    try {
+      await api.post("/api/square/sync", { days: 90 });
+      await api.post("/api/consumables/recompute", {});
+      await load();
+    } catch (err) { setError(err.message); }
+    finally { setSquareSyncing(false); }
+  };
+
   const ackAlert = async (id) => {
     try { await api.patch(`/api/price-alerts/${id}/acknowledge`, {}); setAlerts(al => al.filter(a => a.id !== id)); }
     catch (err) { setError(err.message); }
@@ -106,6 +120,12 @@ export default function ExpensesView({ onOpenInvoices, T }) {
             style={{ padding:"6px 14px", borderRadius:8, fontSize:12, cursor:"pointer",
               background:"transparent", color:T.GOLD, border:`1px solid ${T.BORDER}` }}>
             {recomputing ? "Recomputing…" : "↻ Recompute"}
+          </button>
+          <button onClick={syncSquare} disabled={squareSyncing}
+            title="Refill 90 days of Square sales data used as baseline denominators, then recompute"
+            style={{ padding:"6px 14px", borderRadius:8, fontSize:12, cursor:"pointer",
+              background:"transparent", color:T.GOLD, border:`1px solid ${T.BORDER}` }}>
+            {squareSyncing ? "Syncing Square…" : "⟳ Sync Square (90d)"}
           </button>
         </div>
       </div>
