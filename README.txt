@@ -16,7 +16,7 @@ LOCAL DEVELOPMENT
 
 RAILWAY SETUP
 ----------------------------------
-1. Deploy from the GitHub repo (Dockerfile build, node:20-slim).
+1. Deploy from the GitHub repo (Dockerfile build, node:22-slim).
 
 2. Attach a VOLUME to the service, mounted at /data
    (Railway → service → Volumes). Without it, invoice/expense data is
